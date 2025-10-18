@@ -16,7 +16,10 @@ function script() {
     return gulp.src(paths.caniuseEmbed)
         .pipe(uglify('caniuse-embed.min.js'))
         .pipe(gulp.dest('public'))
-        .pipe(gulp.src(paths.embedScript))
+}
+
+function scriptEmbed() {
+    return gulp.src(paths.embedScript)
         .pipe(uglify())
         .pipe(gulp.dest('public/embed'));
 }
@@ -43,11 +46,11 @@ function connectServer() {
 }
 
 function watch() {
-    gulp.watch(paths.caniuseEmbed, script); 
-    gulp.watch(paths.embedScript, script); 
-    gulp.watch("src/embed/scss/*.scss", sassTask); 
-    gulp.watch(paths.embedHTML, minifyHtml); 
+    gulp.watch(paths.caniuseEmbed, script);
+    gulp.watch(paths.embedScript, scriptEmbed);
+    gulp.watch("src/embed/scss/*.scss", sassTask);
+    gulp.watch(paths.embedHTML, minifyHtml);
 }
 
-exports.default = gulp.series(script, sassTask, minifyHtml, watch);
-exports.full = gulp.series(connectServer, script, sassTask, minifyHtml, watch);
+exports.default = gulp.series(script, scriptEmbed, sassTask, minifyHtml, watch);
+exports.full = gulp.series(connectServer, script, scriptEmbed, sassTask, minifyHtml, watch);

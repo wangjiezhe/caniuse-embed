@@ -54,7 +54,7 @@ var FEATURE;
 
 
 var caniuseDataUrl = 'https://raw.githubusercontent.com/Fyrd/caniuse/main/fulldata-json/data-2.0.json';
-var embedAPI = 'https://api.caniuse.bitsofco.de';
+var embedAPI = 'https://api.caniuse.wangjiezhe.com';
 
 var BROWSERS = ['ie', 'edge', 'firefox', 'chrome', 'safari', 'ios_saf', 'op_mini', 'and_chr', 'android', 'samsung'];
 var MDN_BROWSERS_KEY = {
@@ -447,10 +447,10 @@ function displayFeatureInformation() {
 
     switch (OPTIONS.dataSource) {
         case 'mdn':
-            document.getElementById("footer-left").innerHTML = "Data from <a href=\"https://github.com/mdn/browser-compat-data\">MDN</a> | Embed from <a href=\"https://caniuse.bitsofco.de\">caniuse.bitsofco.de</a>";
+            document.getElementById("footer-left").innerHTML = "Data from <a href=\"https://github.com/mdn/browser-compat-data\">MDN</a> | Embed from <a href=\"https://caniuse.wangjiezhe.com\">caniuse.wangjiezhe.com</a>";
             break;
         case 'caniuse':
-            document.getElementById("footer-left").innerHTML = "Data from <a href=\"https://caniuse.com\">caniuse.com</a> | Embed from <a href=\"https://caniuse.bitsofco.de\">caniuse.bitsofco.de</a>";
+            document.getElementById("footer-left").innerHTML = "Data from <a href=\"https://caniuse.com\">caniuse.com</a> | Embed from <a href=\"https://caniuse.wangjiezhe.com\">caniuse.wangjiezhe.com</a>";
             break;
     }
 

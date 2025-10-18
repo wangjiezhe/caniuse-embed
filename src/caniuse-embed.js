@@ -13,14 +13,14 @@
 
       if (feature) {
 
-        var url = 'https://caniuse.bitsofco.de/embed/index.html';
+        var url = 'https://caniuse.wangjiezhe.com/embed/index.html';
         var iframe = '<iframe src="'+url+'?feat='+feature+'&periods='+periods+'&accessible-colours='+accessibleColours+'&image-base='+imageBase+'" frameborder="0" width="100%" height="400px"></iframe>';
 
         embed.innerHTML = iframe;
 
       } else {
 
-        embed.innerHTML = "A feature was not included. Go to <a href='https://caniuse.bitsofco.de/#how-to-use'>https://caniuse.bitsofco.de/#how-to-use</a> to generate an embed.";
+        embed.innerHTML = "A feature was not included. Go to <a href='https://caniuse.wangjiezhe.com/#how-to-use'>https://caniuse.wangjiezhe.com/#how-to-use</a> to generate an embed.";
       }
     }
 
