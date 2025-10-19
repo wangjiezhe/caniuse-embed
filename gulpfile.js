@@ -1,9 +1,10 @@
 const gulp = require('gulp');
 const sass = require('gulp-sass')(require('sass'));
-const gutil = require('gulp-util');
-const uglify = require('gulp-uglifyjs');
-const minifyHTML = require('gulp-minify-html');
+const log = require('fancy-log');
+const uglify = require('gulp-uglify');
+const minifyHTML = require('gulp-htmlmin');
 const connect = require('gulp-connect');
+const rename = require('gulp-rename');
 
 const paths = {
     caniuseEmbed: "src/caniuse-embed.js",
@@ -14,7 +15,8 @@ const paths = {
 
 function script() {
     return gulp.src(paths.caniuseEmbed)
-        .pipe(uglify('caniuse-embed.min.js'))
+        .pipe(uglify())
+        .pipe(rename({ suffix: '.min' }))
         .pipe(gulp.dest('public'))
 }
 
@@ -26,16 +28,18 @@ function scriptEmbed() {
 
 function sassTask() {
     return gulp.src(paths.embedStyle)
-        .pipe(sass({
-            style: 'compressed'
-        })
-        .on('error', gutil.log))
+        .pipe(sass({ style: 'compressed' })
+        .on('error', log))
         .pipe(gulp.dest('public/embed'));
 }
 
 function minifyHtml() {
     return gulp.src(paths.embedHTML)
-        .pipe(minifyHTML({ empty: true }))
+        .pipe(minifyHTML({
+            removeAttributeQuotes: true,
+            removeComments: true,
+            collapseWhitespace: true
+        }))
         .pipe(gulp.dest('public/embed'));
 }
 
