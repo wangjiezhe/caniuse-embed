@@ -399,7 +399,13 @@ function displayLoadingMessage() {
 function displayFeatureInformation() {
 
     document.getElementById('featureTitle').textContent = FEATURE.title;
-    document.getElementById('featureLink').href = FEATURE.url;
+    if (FEATURE.url == undefined) {
+        const featureLink = document.getElementById('featureLink');
+        const spanElement = featureLink.querySelector('span');
+        featureLink.outerHTML = spanElement.outerHTML;
+    } else {
+        document.getElementById('featureLink').href = FEATURE.url;
+    }
 
     if (FEATURE.description) {
         var featureDescription = FEATURE.description;
