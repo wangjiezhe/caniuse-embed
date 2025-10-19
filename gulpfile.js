@@ -18,19 +18,22 @@ function script() {
         .pipe(uglify())
         .pipe(rename({ suffix: '.min' }))
         .pipe(gulp.dest('public'))
+        .pipe(connect.reload());
 }
 
 function scriptEmbed() {
     return gulp.src(paths.embedScript)
         .pipe(uglify())
-        .pipe(gulp.dest('public/embed'));
+        .pipe(gulp.dest('public/embed'))
+        .pipe(connect.reload());
 }
 
 function sassTask() {
     return gulp.src(paths.embedStyle)
         .pipe(sass({ style: 'compressed' })
         .on('error', log))
-        .pipe(gulp.dest('public/embed'));
+        .pipe(gulp.dest('public/embed'))
+        .pipe(connect.reload());
 }
 
 function minifyHtml() {
@@ -40,12 +43,15 @@ function minifyHtml() {
             removeComments: true,
             collapseWhitespace: true
         }))
-        .pipe(gulp.dest('public/embed'));
+        .pipe(gulp.dest('public/embed'))
+        .pipe(connect.reload());
 }
 
 function connectServer() {
     return connect.server({
-        port: 8000
+        root: 'public',
+        port: 8000,
+        livereload: true
     });
 }
 
@@ -58,4 +64,4 @@ function watch() {
 
 exports.default = gulp.series(script, scriptEmbed, sassTask, minifyHtml, watch);
 exports.build = gulp.series(script, scriptEmbed, sassTask, minifyHtml);
-exports.full = gulp.series(connectServer, script, scriptEmbed, sassTask, minifyHtml, watch);
+exports.full = gulp.parallel(connectServer, gulp.series(script, scriptEmbed, sassTask, minifyHtml, watch));
