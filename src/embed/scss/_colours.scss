@@ -1,3 +1,5 @@
+@use "vars";
+
 /* Table Head: Browser Names ************************** */
 
 th.ie .browser-title,
@@ -39,15 +41,15 @@ th.samsung .browser-title {
 
 tr.statistics td.y span:not(.usage),
 .legend .y {
-  background-color: $supported;
+  background-color: vars.$supported;
   background-color: var(--supported);
-  color: $font-colour;
+  color: vars.$font-colour;
   color: var(--font-colour);
 }
 
 body.accessible-colours tr.statistics td.y span:not(.usage),
 body.accessible-colours .legend .y {
-  background-color: $supported-a;
+  background-color: vars.$supported-a;
   background-color: var(--supported);
 }
 
@@ -57,7 +59,7 @@ tr.statistics td.n span:not(.usage),
 tr.statistics td.p span:not(.usage),
 tr.statistics td.d span:not(.usage),
 .legend .n {
-  background-color: $not-supported;
+  background-color: vars.$not-supported;
   background-color: var(--not-supported);
   color: #FFF;
 }
@@ -66,7 +68,7 @@ body.accessible-colours tr.statistics td.n span:not(.usage),
 body.accessible-colours tr.statistics td.p span:not(.usage),
 body.accessible-colours tr.statistics td.d span:not(.usage),
 .legend .n {
-  background-color: $not-supported-a;
+  background-color: vars.$not-supported-a;
   background-color: var(--not-supported);
   color: #000;
 }
@@ -75,15 +77,15 @@ body.accessible-colours tr.statistics td.d span:not(.usage),
 
 tr.statistics td.a span:not(.usage),
 .legend .a {
-  background-color: $partial;
+  background-color: vars.$partial;
   background-color: var(--partial);
-  color: $font-colour;
+  color: vars.$font-colour;
   color: var(--font-colour);
 }
 
 body.accessible-colours tr.statistics td.a span:not(.usage),
 body.accessible-colours .legend .a {
-  background-color: $partial-a;
+  background-color: vars.$partial-a;
   background-color: var(--partial);
 }
 
@@ -91,7 +93,7 @@ body.accessible-colours .legend .a {
 
 tr.statistics td.u span:not(.usage),
 .legend .u {
-  background-color: $unknown;
+  background-color: vars.$unknown;
   color: #FFF;
 }
 

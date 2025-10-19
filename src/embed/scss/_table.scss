@@ -1,3 +1,5 @@
+@use "vars";
+
 /* Table Layout ************************** */
 
 // Table
@@ -21,7 +23,7 @@ table thead th {
   width: 10%;
   vertical-align: bottom;
 
-  @include supports-grid() {
+  @include vars.supports-grid() {
     width: 100%;
   }
 }
@@ -60,13 +62,13 @@ table thead th {
 
 table thead th,
 .browser-title {
-  @include supports-grid() {
+  @include vars.supports-grid() {
     display: grid;
   }
 }
 
 .browser-title span {
-  @include supports-grid() {
+  @include vars.supports-grid() {
     align-self: end;
   }
 }
@@ -74,7 +76,7 @@ table thead th,
 // Table Body
 
 table tbody {
-  @include supports-grid() {
+  @include vars.supports-grid() {
     display: grid;
     grid-row-gap: 5px;
   }
@@ -100,7 +102,7 @@ table tbody td span:not(.usage) {
 // Header or Body Rows
 
 table tr {
-  @include supports-grid() {
+  @include vars.supports-grid() {
     display: grid;
     grid-template-columns: repeat(10, 1fr);
     grid-gap: 5px;
@@ -109,9 +111,9 @@ table tr {
 
 table td,
 table th {
-  border: 5px solid $bg-colour;
+  border: 5px solid vars.$bg-colour;
 
-  @include supports-grid() {
+  @include vars.supports-grid() {
     border: none;
   }
 }
@@ -119,27 +121,27 @@ table th {
 // Current Row
 
 tr.current {
-  @include supports-grid() {
-    background-color: $dark-grey;
-    outline: 5px solid $dark-grey;
+  @include vars.supports-grid() {
+    background-color: vars.$dark-grey;
+    outline: 5px solid vars.$dark-grey;
     margin-top: 5px;
     margin-bottom: 5px;
   }
 }
 
 tr.current td {
-  border: 5px solid $dark-grey;
+  border: 5px solid vars.$dark-grey;
   position: relative;
 
-  @include supports-grid() {
+  @include vars.supports-grid() {
     border: none;
   }
 }
 
 tr.current td span {
-  border-top: 5px solid $dark-grey;
+  border-top: 5px solid vars.$dark-grey;
 
-  @include supports-grid() {
+  @include vars.supports-grid() {
     border: 0;
   }
 }
@@ -147,9 +149,9 @@ tr.current td span {
 // First Future Row
 
 tr.future_1 td span {
-  border-top: 5px solid $bg-colour;
+  border-top: 5px solid vars.$bg-colour;
 
-  @include supports-grid() {
+  @include vars.supports-grid() {
     border: 0;
   }
 }

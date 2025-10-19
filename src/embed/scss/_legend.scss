@@ -1,3 +1,5 @@
+@use "vars";
+
 
 .legend div {
   display: inline-block;
@@ -33,9 +35,9 @@
 }
 
 span.a {
-  color: $partial;
+  color: vars.$partial;
 }
 
 span.y {
-  color: $supported;
+  color: vars.$supported;
 }

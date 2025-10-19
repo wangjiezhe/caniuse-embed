@@ -1,19 +1,21 @@
+@use "vars";
+
 /* LAYOUT */
 
 .feature {
-  background-color: $bg-colour;
+  background-color: vars.$bg-colour;
   position: relative;
-  border: 3px solid $theme;
+  border: 3px solid vars.$theme;
   border-bottom: 0;
   display: none;
 }
 
 body.caniuse .feature {
-  border-color: $theme-caniuse;
+  border-color: vars.$theme-caniuse;
 }
 
 body.mdn .feature {
-  border-color: $theme-mdn;
+  border-color: vars.$theme-mdn;
 }
 
 body.screenshot {
@@ -54,7 +56,7 @@ body.screenshot {
 .footer {
   padding: 5px 10px;
   margin-top: 20px;
-  background-color: $theme;
+  background-color: vars.$theme;
   color: #FFF;
   font-size: 1.1rem;
   display: flex;
@@ -62,11 +64,11 @@ body.screenshot {
 }
 
 body.caniuse .footer {
-  background-color: $theme-caniuse;
+  background-color: vars.$theme-caniuse;
 }
 
 body.mdn .footer {
-  background-color: $theme-mdn;
+  background-color: vars.$theme-mdn;
 }
 
 .footer button {

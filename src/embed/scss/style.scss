@@ -1,9 +1,9 @@
 /* CanIUse Embed Styles */
 
-@import "vars";
-@import "reset";
-@import "base";
-@import "layout";
-@import "table";
-@import "legend";
-@import "colours";
+@use "vars";
+@use "reset";
+@use "base";
+@use "layout";
+@use "table";
+@use "legend";
+@use "colours";

@@ -27,7 +27,7 @@ function scriptEmbed() {
 function sassTask() {
     return gulp.src(paths.embedStyle)
         .pipe(sass({
-            outputStyle: 'compressed'
+            style: 'compressed'
         })
         .on('error', gutil.log))
         .pipe(gulp.dest('public/embed'));
