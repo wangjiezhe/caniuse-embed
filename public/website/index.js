@@ -1,6 +1,6 @@
 var generateEmbedButton = document.getElementById("generate-embed");
 var featureSelect = $('select[name="featureID"]');
-var embedAPI = 'https://api.caniuse.bitsofco.de';
+var embedAPI = 'https://api.caniuse.wangjiezhe.com';
 
 /* =====================
  * Utility functions
@@ -55,25 +55,12 @@ function getFeatureList() {
 function generatePreview(featureID, periods, accessibleColours, imageBase) {
 
 	var textPreview = `<p>Data on support for the ${featureID} feature across the major browsers</p>`;
-	var imagePreview;
 
-	if (!imageBase && featureID.indexOf("mdn-") !== 0) {
-		imageBase = 'https://caniuse.bitsofco.de/image/' + featureID;
-	}
-
-	if (imageBase) {
-		imagePreview = `<picture>
-			<source type="image/webp" srcset="${imageBase}.webp">
-			<source type="image/png" srcset="${imageBase}.png">
-			<img src="${imageBase}.jpg" alt="Data on support for the ${featureID} feature across the major browsers from caniuse.com">
-		</picture>`;
-	}
-
-	var preview = imagePreview || textPreview;
+	var preview = textPreview;
 
 	if (embedType === "interactive-embed") {
 		preview = `<p class="ciu_embed" data-feature="${featureID}" data-periods="${periods}" data-accessible-colours="${accessibleColours}">
-		${imagePreview || textPreview}
+		${textPreview}
 	</p>`;
 	}
 
@@ -104,48 +91,6 @@ function displayPreview(preview) {
 	return preview;
 }
 
-function captureStaticScreenshot(feature, periods, accessibleColours) {
-
-	const url = embedAPI + '/capture';
-
-	const options = {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json; charset=utf-8"
-		},
-		body: JSON.stringify({
-			feature: feature,
-			periods: periods,
-			accessibleColours: accessibleColours
-		})
-	};
-
-	generateEmbedButton.innerHTML = '<div aria-label="Loading" class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>';
-	let screenshot = null;
-
-	return fetch(url, options)
-		.then((res) => res.json())
-		.then((res) => screenshot = res)
-		.catch((err) => console.log(err))
-		.then(() => generateEmbedButton.innerHTML = 'Generate')
-		.then(() => screenshot);
-}
-
-function setDateForStaticImage() {
-
-    var span = document.getElementById('static-image-date');
-
-    var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-    var d = new Date();
-    var day = d.getDate();
-    var month = monthNames[d.getMonth()];
-    var year = d.getFullYear();
-
-    span.textContent = '(as of ' + day + ' ' + month + ' ' + year + ')';
-
-}
-
 /* =====================
  * Initialise
  * =====================*/
@@ -157,18 +102,6 @@ $('input[value="current"]').on('click', function() { return false; });
 
 getFeatureList();
 
-setDateForStaticImage();
-
-featureSelect.on('change', function (e) {
-    var option = e.target[0];
-    var dataSource = option.value.indexOf('mdn-') === 0 ? 'mdn' : 'caniuse';
-    if (dataSource === 'mdn') {
-        document.querySelector('input[type="radio"][value="live-image"]').setAttribute('disabled', 'disabled');
-    } else {
-        document.querySelector('input[type="radio"][value="live-image"]').removeAttribute('disabled');
-    }
-});
-
 $('input[name="embed-type"]').on('change', function(e) {
 
 	document.getElementById('step-script').setAttribute('hidden', 'hidden');
@@ -178,11 +111,7 @@ $('input[name="embed-type"]').on('change', function(e) {
 
 	switch(embedType) {
 		case "interactive-embed":
-		case "static-image":
 			document.getElementById('step-settings').removeAttribute('hidden');
-			break;
-		case "live-image":
-			document.getElementById('step-settings').setAttribute('hidden', 'hidden');
 			break;
 	}
 });
@@ -200,53 +129,13 @@ generateEmbedButton.addEventListener('click', function(e) {
 		ga('send', 'event', 'button', 'click', 'generate embed');
 	}
 
-	function generateLiveImage(featureID) {
-		var preview = generatePreview(featureID);
-		displayExportCode(preview);
-		displayPreview(preview);
-
-		document.getElementById('step-result').removeAttribute('hidden');
-		ga('send', 'event', 'button', 'click', 'generate embed');
-	}
-
-	function generateStaticImage(featureID, periods, accessibleColours) {
-		captureStaticScreenshot(featureID, periods, accessibleColours)
-			.then((screenshot) => {
-				if (!screenshot) return console.log("Error generating screenshot");
-                if (!screenshot.public_id) return console.log("Error generating screenshot");
-
-                console.log(screenshot);
-
-				const splitPublicId = screenshot.public_id.split("/");
-				const filename = splitPublicId[splitPublicId.length - 1];
-
-				const imageBase = "https://caniuse.bitsofco.de/static/v1/" + filename;
-				const preview = generatePreview(featureID, null, null, imageBase);
-				displayExportCode(preview);
-				displayPreview(preview);
-
-				document.getElementById('step-result').removeAttribute('hidden');
-				ga('send', 'event', 'button', 'click', 'generate embed')
-			});
-	}
-
 	var featureID = $('select[name="featureID"]').val();
 	var periods = getCheckedBoxes("periods").join();
 	var accessibleColours = document.getElementById("add-accessible-colours").checked;
 
-    if (featureID.indexOf("mdn-") === 0 && embedType === "live-image") {
-        embedType = "interactive-embed";
-    }
-
 	switch(embedType) {
 		case "interactive-embed":
 			generateInteractiveEmbed(featureID, periods, accessibleColours);
-			break;
-		case "live-image":
-			generateLiveImage(featureID);
-			break;
-		case "static-image":
-			generateStaticImage(featureID, periods, accessibleColours);
 			break;
 	}
 
