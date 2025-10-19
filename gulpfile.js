@@ -53,4 +53,5 @@ function watch() {
 }
 
 exports.default = gulp.series(script, scriptEmbed, sassTask, minifyHtml, watch);
+exports.build = gulp.series(script, scriptEmbed, sassTask, minifyHtml);
 exports.full = gulp.series(connectServer, script, scriptEmbed, sassTask, minifyHtml, watch);
