@@ -202,6 +202,23 @@ function getFeature() {
     }
 }
 
+async function resetMdnUrl() {
+    if (OPTIONS.dataSource !== 'mdn') return;
+    var url = embedAPI + '/mdn-browser-compat-data';
+
+    function splitLastPart(str) {
+        const parts = str.split('__');
+        return [parts.slice(0, -1).join('__'), parts.pop()];
+    }
+
+    const [parentFeatureID, tag] = splitLastPart(OPTIONS.featureID);
+    var body = { feature: parentFeatureID };
+    const feature = await post(url, body);
+    if (feature.mdn_url !== undefined) {
+        FEATURE.url = `${feature.mdn_url}#${tag}`;
+    }
+}
+
 function getBrowserData(agents) {
     return Promise.resolve()
         .then(function () {
@@ -396,15 +413,20 @@ function displayLoadingMessage() {
     document.getElementById('defaultMessage').innerHTML = defaultMessage;
 }
 
-function displayFeatureInformation() {
+async function displayFeatureInformation() {
 
     document.getElementById('featureTitle').textContent = FEATURE.title;
-    if (FEATURE.url == undefined) {
-        const featureLink = document.getElementById('featureLink');
-        const spanElement = featureLink.querySelector('span');
-        featureLink.outerHTML = spanElement.outerHTML;
-    } else {
+    if (FEATURE.url !== undefined) {
         document.getElementById('featureLink').href = FEATURE.url;
+    } else {
+        await resetMdnUrl();
+        if (FEATURE.url !== undefined) {
+            document.getElementById('featureLink').href = FEATURE.url;
+        } else {
+            const featureLink = document.getElementById('featureLink');
+            const spanElement = featureLink.querySelector('span');
+            featureLink.outerHTML = spanElement.outerHTML;
+        }
     }
 
     if (FEATURE.description) {
