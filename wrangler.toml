@@ -1,5 +1,6 @@
 name = "caniuse-embed"
 compatibility_date = "2025-10-08"
+pages_build_output_dir = "./public"
 
 services = [
   { binding = "API", service = "caniuse-embed-api" }
