@@ -1,0 +1,12 @@
+name = "caniuse-embed"
+compatibility_date = "2025-10-08"
+
+services = [
+  { binding = "API", service = "caniuse-embed-api" }
+]
+
+[build]
+command = "npm run build"
+
+[assets]
+directory = "./public"
