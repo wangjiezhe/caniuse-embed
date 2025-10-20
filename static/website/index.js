@@ -28,18 +28,12 @@ async function getFeatureList() {
 	const url = embedAPI + '/features';
 	const res = await fetch(url);
 	const features = await res.json();
-	var options = "";
-	for (var i = 0; i < features.length; i++) {
-		var feature = features[i];
-		options += '<option value="' + feature.id + '">' + feature.title + '</option>';
-	}
-	featureSelect.append(options);
-	featureSelect.selectize({
-		create: false,
-		sortField: 'text',
-		placeholder: 'Select a Feature',
-		maxOptions: null
+	const options = features.map((feature) => {
+		return {label: feature.title, value: feature.id}
 	});
+	const choice = new Choices(featureSelect[0])
+	choice.setChoices(options);
+	choice.setChoiceByValue('once-event-listener');
 }
 
 /* =====================
