@@ -42,7 +42,8 @@ function getFeatureList() {
 			featureSelect.selectize({
 				create: false,
 				sortField: 'text',
-				placeholder: 'Select a Feature'
+				placeholder: 'Select a Feature',
+				maxOptions: null
 			});
 
 		});
