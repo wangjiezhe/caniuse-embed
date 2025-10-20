@@ -5,9 +5,3 @@ pages_build_output_dir = "./public"
 services = [
   { binding = "API", service = "caniuse-embed-api" }
 ]
-
-# [build]
-# command = "npm run build"
-
-# [assets]
-# directory = "./public"
