@@ -4,7 +4,7 @@
  *
  * ******************************* */
 
-var OPTIONS;
+const OPTIONS = {};
 /*
     OPTIONS: {
         featureID*,
@@ -14,7 +14,7 @@ var OPTIONS;
         screenshot
     }
  */
-var BROWSER_DATA;
+const BROWSER_DATA = {};
 /*
     BROWSER_DATA: {
         browserVersions: {
@@ -30,7 +30,7 @@ var BROWSER_DATA;
     }
 */
 
-var FEATURE;
+let FEATURE = {};
 /*
     FEATURE: {
         feature: {
@@ -52,12 +52,11 @@ var FEATURE;
     }
  */
 
+const caniuseDataUrl = 'https://raw.githubusercontent.com/Fyrd/caniuse/main/fulldata-json/data-2.0.json';
+const embedAPI = 'https://api.caniuse.wangjiezhe.com';
 
-var caniuseDataUrl = 'https://raw.githubusercontent.com/Fyrd/caniuse/main/fulldata-json/data-2.0.json';
-var embedAPI = 'https://api.caniuse.wangjiezhe.com';
-
-var BROWSERS = ['ie', 'edge', 'firefox', 'chrome', 'safari', 'ios_saf', 'op_mini', 'and_chr', 'android', 'samsung'];
-var MDN_BROWSERS_KEY = {
+const BROWSERS = ['ie', 'edge', 'firefox', 'chrome', 'safari', 'ios_saf', 'op_mini', 'and_chr', 'android', 'samsung'];
+const MDN_BROWSERS_KEY = {
     'ie': 'ie',
     'edge': 'edge',
     'firefox': 'firefox',
@@ -70,7 +69,7 @@ var MDN_BROWSERS_KEY = {
     'samsung': 'samsunginternet_android',
 };
 
-var FEATURE_IDENTIFIERS = {
+const FEATURE_IDENTIFIERS = {
     supported: 'y',
     unsupported: 'n',
     partial: 'a',
@@ -88,81 +87,62 @@ var FEATURE_IDENTIFIERS = {
  * ******************************* */
 
 function setGlobalOptions() {
+    const params = new URLSearchParams(window.location.search);
+    const opts = {};
 
-    var params = window.location.search.split("?")[1].split("&");
-    var opts = {};
+    // Set feature ID and data source
+    opts.featureID = params.get('feat');
+    opts.dataSource = opts.featureID?.startsWith('mdn-') ? 'mdn' : 'caniuse';
 
-    params.forEach(function (param) {
-        var key = param.split("=")[0];
-        var value = param.split("=")[1];
+    // Set periods
+    const periodsParam = params.get('periods');
+    opts.periods = periodsParam ? periodsParam.split(',') : ['future_1', 'current', 'past_1', 'past_2'];
 
-        switch (key) {
-            case "feat":
-                opts.featureID = value;
-                opts.dataSource = opts.featureID.indexOf('mdn-') === 0 ? 'mdn' : 'caniuse';
-                break;
-            case "periods":
-                opts.periods = value.split(",");
-                break;
-            case "accessible-colours":
-                opts.accessibleColours = value === "true";
-                break;
-            case "image-base":
-                if (value !== 'none') opts.imageBase = value;
-                break;
-            case "screenshot":
-                opts.screenshot = value === "true";
-                break;
-        }
-    });
+    opts.accessibleColours = params.get('accessible-colours') === 'true';
 
-    if (!opts.periods) opts.periods = ['future_1', 'current', 'past_1', 'past_2'];
+    const imageBaseParam = params.get('image-base');
+    if (imageBaseParam !== 'none') {
+        opts.imageBase = imageBaseParam;
+    }
 
-    OPTIONS = opts;
+    opts.screenshot = params.get('screenshot') === 'true';
+
+    Object.assign(OPTIONS, opts);
 }
 
 function getShortenedBrowserVersion(version) {
-    if (version && version.indexOf('-') > -1) {
-        version = version.split('-')[1];
+    if (version && version.includes('-')) {
+        return version.split('-')[1];
     }
     return version;
 }
 
-function get(url) {
-    return new Promise(function(resolve, reject) {
-        var req = new XMLHttpRequest();
-        req.open('GET', url, true);
-
-        req.onload = function() {
-            if (req.status === 200) {
-                resolve( JSON.parse(req.response));
-            } else {
-                reject(Error(req.statusText));
-            }
-        };
-
-        req.onerror = function() { reject(Error("Network Error")); };
-        req.send();
+async function get(url) {
+    const response = await fetch(url, {
+        mode: 'cors',
+        credentials: 'omit'
     });
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
 }
 
-function post(url, body) {
-    return new Promise(function(resolve, reject) {
-        var req = new XMLHttpRequest();
-        req.open('POST', url, true);
-        req.setRequestHeader('Content-type', 'application/json; charset=utf-8');
-
-        req.onload = function() {
-            if (req.status === 200) {
-                resolve( JSON.parse(req.response));
-            } else {
-                reject(Error(req.statusText));
-            }
-        };
-
-        req.onerror = function() { reject(Error("Network Error")); };
-        req.send( JSON.stringify(body) );
+async function post(url, body) {
+    const response = await fetch(url, {
+        method: 'POST',
+        mode: 'cors',
+        credentials: 'omit',
+        headers: {
+            'Content-Type': 'application/json; charset=utf-8'
+        },
+        body: JSON.stringify(body)
     });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
 }
 
 
@@ -173,38 +153,37 @@ function post(url, body) {
  *
  * ******************************* */
 
-function getFeature() {
+async function getFeature() {
     switch (OPTIONS.dataSource) {
+        case 'mdn': {
+            const url = `${embedAPI}/mdn-browser-compat-data`;
+            const body = { feature: OPTIONS.featureID };
 
-        case 'mdn':
+            const feature = await post(url, body);
+            FEATURE = {
+                url: feature.mdn_url,
+                ...feature
+            };
 
-            var url = embedAPI + '/mdn-browser-compat-data';
-            var body = { feature: OPTIONS.featureID };
-            return post(url, body)
-                .then(function (feature) {
-                    FEATURE = Object.assign({
-                        url: feature.mdn_url,
-                    }, feature);
+            return await getBrowserData();
+        }
 
-                    return getBrowserData()
-                });
+        case 'caniuse': {
+            const res = await get(caniuseDataUrl);
+            FEATURE = {
+                url: `https://caniuse.com/#feat=${OPTIONS.featureID}`,
+                ...res.data[OPTIONS.featureID]
+            };
 
-        case 'caniuse':
-
-            return get(caniuseDataUrl)
-                .then(function (res) {
-                    FEATURE = Object.assign({
-                        url: 'https://caniuse.com/#feat=' + OPTIONS.featureID,
-                    }, res.data[OPTIONS.featureID]);
-
-                    return getBrowserData(res.agents);
-                });
+            return await getBrowserData(res.agents);
+        }
     }
 }
 
 async function resetMdnUrl() {
     if (OPTIONS.dataSource !== 'mdn') return;
-    var url = embedAPI + '/mdn-browser-compat-data';
+
+    const url = `${embedAPI}/mdn-browser-compat-data`;
 
     function splitLastPart(str) {
         const parts = str.split('__');
@@ -212,26 +191,21 @@ async function resetMdnUrl() {
     }
 
     const [parentFeatureID, tag] = splitLastPart(OPTIONS.featureID);
-    var body = { feature: parentFeatureID };
+
+    const body = { feature: parentFeatureID };
     const feature = await post(url, body);
+
     if (feature.mdn_url !== undefined) {
         FEATURE.url = `${feature.mdn_url}#${tag}`;
     }
 }
 
-function getBrowserData(agents) {
-    return Promise.resolve()
-        .then(function () {
-            if (agents) return agents;
-
-            return get(caniuseDataUrl)
-                .then(function (res) {
-                    return res.agents;
-                });
-        })
-        .then(function (a) {
-            return parseBrowserData(a);
-        });
+async function getBrowserData(agents) {
+    if (!agents) {
+        const res = await get(caniuseDataUrl);
+        agents = res.agents;
+    }
+    return parseBrowserData(agents);
 }
 
 
@@ -243,111 +217,93 @@ function getBrowserData(agents) {
  * ******************************* */
 
 function parseBrowserData(agents) {
+    const browserVersions = {};
 
-    var browserVersions = {};
-
-    for (var i = 0; i < BROWSERS.length; i++) {
-        var browser = BROWSERS[i];
-
+    for (const browser of BROWSERS) {
         // GET INDEX OF CURRENT VERSION
-        var currentVersion = agents[browser].current_version;
-        var currentVersionIndex;
-        for (var x = 0; x < agents[browser].version_list.length; x++) {
+        const currentVersion = agents[browser].current_version;
+        let currentVersionIndex;
+
+        for (let x = 0; x < agents[browser].version_list.length; x++) {
             if (agents[browser].version_list[x].era === 0) {
                 currentVersionIndex = x;
                 break;
             }
         }
-        currentVersionIndex = parseInt(currentVersionIndex);
-
 
         browserVersions[browser] = {};
 
-        for (var x = 0; x < OPTIONS.periods.length; x++) {
-
-            var period = OPTIONS.periods[x];
-
+        for (const period of OPTIONS.periods) {
             if (period === 'current') {
-
                 browserVersions[browser][period] = currentVersion;
-            } else if (period.indexOf('past') > -1) {
-
-                n = parseInt(period.split('_')[1]);
-                browserVersions[browser][period] = agents[browser].version_list[currentVersionIndex - n] ? agents[browser].version_list[currentVersionIndex - n].version : null
-            } else if (period.indexOf('future') > -1) {
-
-                n = parseInt(period.split('_')[1]);
-                browserVersions[browser][period] = agents[browser].version_list[currentVersionIndex + n] ? agents[browser].version_list[currentVersionIndex + n].version : null
+            } else if (period.includes('past')) {
+                const n = parseInt(period.split('_')[1]);
+                browserVersions[browser][period] = agents[browser].version_list[currentVersionIndex - n]?.version || null;
+            } else if (period.includes('future')) {
+                const n = parseInt(period.split('_')[1]);
+                browserVersions[browser][period] = agents[browser].version_list[currentVersionIndex + n]?.version || null;
             }
-
-
         }
     }
 
+    const browserUsage = {};
 
-    var browserUsage = {};
-
-    for (var i = 0; i < BROWSERS.length; i++) {
-        var browser = BROWSERS[i];
+    for (const browser of BROWSERS) {
         browserUsage[browser] = {};
 
-        for (var x = 0; x < OPTIONS.periods.length; x++) {
-            var period = OPTIONS.periods[x];
-
-            var period_version = browserVersions[browser][period];
-            var period_usage = agents[browser].usage_global[period_version];
+        for (const period of OPTIONS.periods) {
+            const period_version = browserVersions[browser][period];
+            let period_usage = agents[browser].usage_global[period_version];
             period_usage = period_usage ? period_usage.toFixed(2) : 0;
-
             browserUsage[browser][period] = period_usage;
         }
     }
 
-    return BROWSER_DATA = {
+    Object.assign(BROWSER_DATA, {
         versions: browserVersions,
         usage: browserUsage
-    };
+    });
+
+    return BROWSER_DATA;
 }
 
 function parseSupportData() {
-
-    var browserSupport = {};
+    const browserSupport = {};
 
     function parseCanIUseData(browser, period) {
         browserSupport[browser][period] = FEATURE.stats[browser][BROWSER_DATA.versions[browser][period]];
     }
 
     function parseMDNData(browser, period) {
-
         if (!BROWSER_DATA.versions[browser][period]) return;
 
-        var supportData = FEATURE.support[MDN_BROWSERS_KEY[browser]];
+        const supportData = FEATURE.support[MDN_BROWSERS_KEY[browser]];
         if (!supportData) {
             browserSupport[browser][period] = FEATURE_IDENTIFIERS.unknown;
             return;
         }
 
-        var this_version = BROWSER_DATA.versions[browser][period];
+        const this_version = BROWSER_DATA.versions[browser][period];
 
         function getValue(key) {
-            var val;
+            let val = supportData[key];
 
-            if (supportData[key]) {
-                val = supportData[key]
-            } else if (supportData[0] && supportData[0][key]) {
-                val = supportData[0][key]
-            } else if (supportData[1] && supportData[1][key]) {
-                val = supportData[1][key]
+            if (!val && supportData[0]?.[key]) {
+                val = supportData[0][key];
+            } else if (!val && supportData[1]?.[key]) {
+                val = supportData[1][key];
             }
 
-            if (val) val = val.replace(/≤/g, "");
-
+            if (val) {
+                val = val.replace(/≤/g, '');
+            }
             return val;
         }
 
-        var version_added = getValue('version_added');
-        var version_removed = getValue('version_removed');
+        const version_added = getValue('version_added');
+        const version_removed = getValue('version_removed');
 
-        var isSupported = false;
+        let isSupported = false;
 
         if (version_added === true) {
             isSupported = true;
@@ -356,22 +312,19 @@ function parseSupportData() {
         } else if (parseFloat(this_version) >= parseFloat(version_added)) {
             isSupported = true;
         }
+
         if (version_removed && (parseFloat(this_version) <= parseFloat(version_removed))) {
             isSupported = false;
         }
 
-        var supportString = isSupported ? FEATURE_IDENTIFIERS.supported :  FEATURE_IDENTIFIERS.unsupported;
+        const supportString = isSupported ? FEATURE_IDENTIFIERS.supported : FEATURE_IDENTIFIERS.unsupported;
         browserSupport[browser][period] = supportString;
     }
 
-    for (var i = 0; i < BROWSERS.length; i++) {
-        var browser = BROWSERS[i];
-
+    for (const browser of BROWSERS) {
         browserSupport[browser] = {};
 
-        for (var x = 0; x < OPTIONS.periods.length; x++) {
-            var period = OPTIONS.periods[x];
-
+        for (const period of OPTIONS.periods) {
             switch (OPTIONS.dataSource) {
                 case 'mdn':
                     parseMDNData(browser, period);
@@ -395,27 +348,27 @@ function parseSupportData() {
  * ******************************* */
 
 function displayLoadingMessage() {
-    var defaultMessage;
+    let defaultMessage;
 
     if (!OPTIONS.featureID) {
         defaultMessage = 'No feature ID was specified';
     } else if (OPTIONS.imageBase) {
-        defaultMessage = '<picture>' +
-            '<source type="image/webp" srcset="' + OPTIONS.imageBase + '.webp">' +
-            '<source type="image/png" srcset="' + OPTIONS.imageBase + '.png">' +
-            '<source type="image/jpeg" srcset="' + OPTIONS.imageBase + '.jpg">' +
-            '<img src="' + OPTIONS.imageBase + '.png" alt="Data on support for the ' + OPTIONS.featureID + ' feature across the major browsers">' +
-            '</picture>';
+        defaultMessage = `<picture>
+            <source type="image/webp" srcset="${OPTIONS.imageBase}.webp">
+            <source type="image/png" srcset="${OPTIONS.imageBase}.png">
+            <source type="image/jpeg" srcset="${OPTIONS.imageBase}.jpg">
+            <img src="${OPTIONS.imageBase}.png" alt="Data on support for the ${OPTIONS.featureID} feature across the major browsers">
+            </picture>`;
     } else {
-        defaultMessage = 'Can I Use ' + OPTIONS.featureID + '? Data on support for the ' + OPTIONS.featureID + ' feature across the major browsers. (Embed Loading)';
+        defaultMessage = `Can I Use ${OPTIONS.featureID}? Data on support for the ${OPTIONS.featureID} feature across the major browsers. (Embed Loading)`;
     }
 
     document.getElementById('defaultMessage').innerHTML = defaultMessage;
 }
 
 async function displayFeatureInformation() {
-
     document.getElementById('featureTitle').textContent = FEATURE.title;
+
     if (FEATURE.url !== undefined) {
         document.getElementById('featureLink').href = FEATURE.url;
     } else {
@@ -430,55 +383,51 @@ async function displayFeatureInformation() {
     }
 
     if (FEATURE.description) {
-        var featureDescription = FEATURE.description;
-        featureDescription = featureDescription.replace(/</g, "&lt;");
-        featureDescription = featureDescription.replace(/>/g, "&gt;");
-        featureDescription = featureDescription.replace(/&lt;code&gt;/g, "");
-        featureDescription = featureDescription.replace(/&lt;\/code&gt;/g, "");
+        let featureDescription = FEATURE.description
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/&lt;code&gt;/g, '')
+            .replace(/&lt;\/code&gt;/g, '');
         document.getElementById('featureDescription').innerHTML = featureDescription;
     }
 
     if (FEATURE.usage_perc_y) {
-        var global_y = FEATURE.usage_perc_y;
-        var global_a = FEATURE.usage_perc_a;
-        var global_total = global_y + global_a;
-        global_total = global_total.toFixed(2);
+        const global_y = FEATURE.usage_perc_y;
+        const global_a = FEATURE.usage_perc_a;
+        const global_total = (global_y + global_a).toFixed(2);
 
-        document.getElementById('note').innerHTML = 'Global: <span class="y">' + global_y + '%</span> + <span class="a">' + global_a + '%</span> = ' + global_total + '%';
+        document.getElementById('note').innerHTML = `Global: <span class="y">${global_y}%</span> + <span class="a">${global_a}%</span> = ${global_total}%`;
     } else if (FEATURE.status) {
-
         if (FEATURE.status.experimental) {
             document.getElementById('note').innerHTML = '<strong>Experimental</strong> feature';
-        }
-
-        if (FEATURE.status.deprecated) {
+        } else if (FEATURE.status.deprecated) {
             document.getElementById('note').innerHTML = '<strong>Deprecated</strong> feature';
         }
     }
 
     if (OPTIONS.accessibleColours) {
-        document.body.classList.add("accessible-colours");
+        document.body.classList.add('accessible-colours');
     }
 
     if (OPTIONS.screenshot) {
-        document.body.classList.add("screenshot");
+        document.body.classList.add('screenshot');
 
-        var d = new Date();
-        var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        document.getElementById("footer-right").innerHTML = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
-        document.querySelector(".icon-external-link").setAttribute("hidden", "true");
+        const d = new Date();
+        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        document.getElementById('footer-right').innerHTML = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+        document.querySelector('.icon-external-link').setAttribute('hidden', 'true');
     } else {
-        document.getElementById("accessibleColoursToggle").addEventListener("click", function () {
-            document.body.classList.toggle("accessible-colours")
+        document.getElementById('accessibleColoursToggle').addEventListener('click', () => {
+            document.body.classList.toggle('accessible-colours');
         });
     }
 
     switch (OPTIONS.dataSource) {
         case 'mdn':
-            document.getElementById("footer-left").innerHTML = "Data from <a href=\"https://github.com/mdn/browser-compat-data\">MDN</a> | Embed from <a href=\"https://caniuse.wangjiezhe.com\">caniuse.wangjiezhe.com</a>";
+            document.getElementById('footer-left').innerHTML = 'Data from <a href="https://github.com/mdn/browser-compat-data">MDN</a> | Embed from <a href="https://caniuse.wangjiezhe.com">caniuse.wangjiezhe.com</a>';
             break;
         case 'caniuse':
-            document.getElementById("footer-left").innerHTML = "Data from <a href=\"https://caniuse.com\">caniuse.com</a> | Embed from <a href=\"https://caniuse.wangjiezhe.com\">caniuse.wangjiezhe.com</a>";
+            document.getElementById('footer-left').innerHTML = 'Data from <a href="https://caniuse.com">caniuse.com</a> | Embed from <a href="https://caniuse.wangjiezhe.com">caniuse.wangjiezhe.com</a>';
             break;
     }
 
@@ -486,97 +435,78 @@ async function displayFeatureInformation() {
 }
 
 function displayTable(featureSupport) {
+    // Create empty table cells for each browser and each period
+    for (let i = OPTIONS.periods.length - 1; i > -1; i--) {
+        let tableCells = '';
 
-    //  Create empty table cells for each browser and each period
-
-    for (var i = OPTIONS.periods.length - 1; i > -1; i--) {
-
-        var tableCells = "";
-
-        for (var j = 0; j < BROWSERS.length; j++) {
-            tableCells += '<td class="' + BROWSERS[j] + '"></td>';
+        for (const browser of BROWSERS) {
+            tableCells += `<td class="${browser}"></td>`;
         }
 
-        var row = document.createElement("tr");
-        row.className = 'statistics ' + OPTIONS.periods[i];
+        const row = document.createElement('tr');
+        row.className = `statistics ${OPTIONS.periods[i]}`;
         row.innerHTML = tableCells;
-
         document.getElementById('tableBody').appendChild(row);
     }
 
-
     // DISPLAY DATA
-    // *************************
+    let hasPrefixed = false;
+    let hasUnknown = false;
+    let hasFlag = false;
 
+    for (const browser of BROWSERS) {
+        for (const period of OPTIONS.periods) {
+            const row = document.getElementsByClassName(period)[0];
+            const rowChildren = Array.from(row.childNodes);
+            const period_element = rowChildren.find(child =>
+                child.className?.includes(browser)
+            );
 
-    var hasPrefixed = false;
-    var hasUnknown = false;
-    var hasFlag = false;
+            if (!period_element) continue;
 
-
-    for (var i = 0; i < BROWSERS.length; i++) {
-
-        var browser = BROWSERS[i];
-
-
-        // LOOP THROUGH PERIODS (BROWSER VERSIONS)
-        for (var x = 0; x < OPTIONS.periods.length; x++) {
-
-            var period = OPTIONS.periods[x];
-            var period_element;
-
-            // LOOP THROUGH ROW CHILDREN TO FIND THE CURRENT TABLE CELL
-            var row = document.getElementsByClassName(period)[0];
-            var rowChildren = row.childNodes;
-            for (var r = 0; r < rowChildren.length; r++) {
-                if (rowChildren[r].className.indexOf(browser) > -1) {
-                    period_element = rowChildren[r];
-                }
+            // ADD SUPPORT CLASS TO TABLE CELL
+            if (featureSupport[browser][period] !== undefined) {
+                period_element.className += ` ${featureSupport[browser][period]}`;
             }
-
-
-            // 	ADD SUPPORT CLASS TO TABLE CELL
-            featureSupport[browser][period] != undefined ? period_element.className += ' ' + featureSupport[browser][period] : false;
-
             // GET VERSION NUMBER + BROWSER USAGE
-            var browserVersion = getShortenedBrowserVersion(BROWSER_DATA.versions[browser][period]);
-            var versionString = '<span>' + browserVersion + '</span><span class="usage">' + BROWSER_DATA.usage[browser][period] + '%</span>';
+            const browserVersion = getShortenedBrowserVersion(BROWSER_DATA.versions[browser][period]);
+            const versionString = `<span>${browserVersion}</span><span class="usage">${BROWSER_DATA.usage[browser][period]}%</span>`;
 
             // ADD VERSION NUMBER TO TABLE CELL
-            BROWSER_DATA.versions[browser][period] != undefined ? period_element.innerHTML = versionString : period_element.innerHTML = '<span></span>';
+            if (BROWSER_DATA.versions[browser][period] !== undefined) {
+                period_element.innerHTML = versionString;
+            } else {
+                period_element.innerHTML = '<span></span>';
+            }
 
             // CHECK IF ANY HAS PREFIX OR UNKNOWN
-            if (featureSupport[browser][period] != undefined && featureSupport[browser][period].indexOf(FEATURE_IDENTIFIERS.prefixed) > -1) {
+            if (featureSupport[browser][period]?.includes(FEATURE_IDENTIFIERS.prefixed)) {
                 hasPrefixed = true;
             }
-            if (featureSupport[browser][period] != undefined && featureSupport[browser][period].indexOf(FEATURE_IDENTIFIERS.unknown) > -1) {
+            if (featureSupport[browser][period]?.includes(FEATURE_IDENTIFIERS.unknown)) {
                 hasUnknown = true;
             }
-            if (featureSupport[browser][period] != undefined && featureSupport[browser][period].indexOf(FEATURE_IDENTIFIERS.flagged) > -1) {
+            if (featureSupport[browser][period]?.includes(FEATURE_IDENTIFIERS.flagged)) {
                 hasFlag = true;
             }
-
-
-        } // end loop through period
-
-    } // end display data loop
+        }
+    }
 
     // DISPLAY PREFIX LEGEND IF DATA HAS PREFIXED
-    hasPrefixed ? document.getElementById('legendX').style.display = "inline-block" : document.getElementById('legendX').style.display = "none";
-    hasUnknown ? document.getElementById('legendU').style.display = "inline-block" : document.getElementById('legendU').style.display = "none";
-    hasFlag ? document.getElementById('legendD').style.display = "inline-block" : document.getElementById('legendD').style.display = "none";
+    document.getElementById('legendX').style.display = hasPrefixed ? 'inline-block' : 'none';
+    document.getElementById('legendU').style.display = hasUnknown ? 'inline-block' : 'none';
+    document.getElementById('legendD').style.display = hasFlag ? 'inline-block' : 'none';
 }
 
 function postDocumentHeight() {
-    // PASS HEIGHT TO PARENT DOCUMENT
-    var documentHeight = document.getElementsByClassName('feature')[0].scrollHeight;
-    var infoString = 'ciu_embed:' + OPTIONS.featureID + ':' + documentHeight;
-    parent.postMessage(infoString, "*");
+    const documentHeight = document.getElementsByClassName('feature')[0].scrollHeight;
+    const infoString = `ciu_embed:${OPTIONS.featureID}:${documentHeight}`;
+    parent.postMessage(infoString, '*');
 
-    window.onresize = function (event) {
-        documentHeight = document.getElementsByClassName('feature')[0].scrollHeight;
-        var infoString = 'ciu_embed:' + OPTIONS.featureID + ':' + documentHeight;
-        parent.postMessage(infoString, "*");
+    window.onresize = () => {
+        const newDocumentHeight = document.getElementsByClassName('feature')[0].scrollHeight;
+        const newInfoString = `ciu_embed:${OPTIONS.featureID}:${newDocumentHeight}`;
+        parent.postMessage(newInfoString, '*');
     }
 }
 
@@ -588,31 +518,29 @@ function postDocumentHeight() {
  *
  * ******************************* */
 
-(function () {
-
+async function initialize() {
     setGlobalOptions();
     displayLoadingMessage();
 
-    getFeature()
-        .then(function () {
-            return parseSupportData();
-        })
-        .then(function (featureSupport) {
+    try {
+        await getFeature();
+        const featureSupport = parseSupportData();
 
-            console.log(FEATURE);
-            console.log(featureSupport);
+        console.log(FEATURE);
+        console.log(featureSupport);
 
-            displayFeatureInformation();
-            displayTable(featureSupport);
+        await displayFeatureInformation();
+        displayTable(featureSupport);
 
-            document.getElementById('defaultMessage').style.display = "none";
-            document.getElementsByClassName('feature')[0].style.display = "block";
+        document.getElementById('defaultMessage').style.display = 'none';
+        document.getElementsByClassName('feature')[0].style.display = 'block';
 
-            postDocumentHeight();
-        })
-        .catch(function (err) {
-            document.getElementById('defaultMessage').innerHTML = 'Feature not found...';
-            console.error(err);
-        });
+        postDocumentHeight();
+    } catch (err) {
+        document.getElementById('defaultMessage').innerHTML = 'Feature not found...';
+        console.error(err);
+    }
+}
 
-})();
+// Start the application
+initialize();

@@ -24,29 +24,22 @@ function getCheckedBoxes(chkboxName) {
  * Get list of available features for <select>
  * =====================*/
 
-function getFeatureList() {
+async function getFeatureList() {
 	const url = embedAPI + '/features';
-	return fetch(url)
-		.then((res) => res.json())
-		.then((features) => {
-
-			var options = "";
-
-			for (var i = 0; i < features.length; i++) {
-				var feature = features[i];
-				options += '<option value="'+feature.id+'">'+feature.title+'</option>';
-			}
-
-			featureSelect.append(options);
-
-			featureSelect.selectize({
-				create: false,
-				sortField: 'text',
-				placeholder: 'Select a Feature',
-				maxOptions: null
-			});
-
-		});
+	const res = await fetch(url);
+	const features = await res.json();
+	var options = "";
+	for (var i = 0; i < features.length; i++) {
+		var feature = features[i];
+		options += '<option value="' + feature.id + '">' + feature.title + '</option>';
+	}
+	featureSelect.append(options);
+	featureSelect.selectize({
+		create: false,
+		sortField: 'text',
+		placeholder: 'Select a Feature',
+		maxOptions: null
+	});
 }
 
 /* =====================
