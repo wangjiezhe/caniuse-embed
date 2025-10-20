@@ -7,11 +7,18 @@ const connect = require('gulp-connect');
 const rename = require('gulp-rename');
 
 const paths = {
+    staticFile: "static/**",
     caniuseEmbed: "src/caniuse-embed.js",
     embedStyle: "src/embed/scss/style.scss",
     embedScript: "src/embed/script.js",
     embedHTML: "src/embed/index.html"
 };
+
+function staticFile() {
+    return gulp.src(paths.staticFile)
+        .pipe(gulp.dest('public'))
+        .pipe(connect.reload());
+}
 
 function script() {
     return gulp.src(paths.caniuseEmbed)
@@ -56,12 +63,13 @@ function connectServer() {
 }
 
 function watch() {
+    gulp.watch(paths.staticFile, staticFile);
     gulp.watch(paths.caniuseEmbed, script);
     gulp.watch(paths.embedScript, scriptEmbed);
     gulp.watch("src/embed/scss/*.scss", sassTask);
     gulp.watch(paths.embedHTML, minifyHtml);
 }
 
-exports.default = gulp.series(script, scriptEmbed, sassTask, minifyHtml, watch);
-exports.build = gulp.series(script, scriptEmbed, sassTask, minifyHtml);
-exports.full = gulp.parallel(connectServer, gulp.series(script, scriptEmbed, sassTask, minifyHtml, watch));
+exports.default = gulp.series(staticFile, script, scriptEmbed, sassTask, minifyHtml, watch);
+exports.build = gulp.series(staticFile, script, scriptEmbed, sassTask, minifyHtml);
+exports.full = gulp.parallel(connectServer, gulp.series(staticFile, script, scriptEmbed, sassTask, minifyHtml, watch));
