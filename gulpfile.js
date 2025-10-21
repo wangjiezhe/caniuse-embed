@@ -57,7 +57,7 @@ function minifyHtml() {
 function connectServer() {
     return connect.server({
         root: 'public',
-        port: 8000,
+        port: (process.env.PORT || 8000),
         livereload: true
     });
 }
