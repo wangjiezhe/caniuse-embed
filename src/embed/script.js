@@ -180,26 +180,6 @@ async function getFeature() {
     }
 }
 
-async function resetMdnUrl() {
-    if (OPTIONS.dataSource !== 'mdn') return;
-
-    const url = `${embedAPI}/mdn-browser-compat-data`;
-
-    function splitLastPart(str) {
-        const parts = str.split('__');
-        return [parts.slice(0, -1).join('__'), parts.pop()];
-    }
-
-    const [parentFeatureID, tag] = splitLastPart(OPTIONS.featureID);
-
-    const body = { feature: parentFeatureID };
-    const feature = await post(url, body);
-
-    if (feature.mdn_url !== undefined) {
-        FEATURE.url = `${feature.mdn_url}#${tag}`;
-    }
-}
-
 async function getBrowserData(agents) {
     if (!agents) {
         const res = await get(caniuseDataUrl);
@@ -372,14 +352,9 @@ async function displayFeatureInformation() {
     if (FEATURE.url !== undefined) {
         document.getElementById('featureLink').href = FEATURE.url;
     } else {
-        await resetMdnUrl();
-        if (FEATURE.url !== undefined) {
-            document.getElementById('featureLink').href = FEATURE.url;
-        } else {
-            const featureLink = document.getElementById('featureLink');
-            const spanElement = featureLink.querySelector('span');
-            featureLink.outerHTML = spanElement.outerHTML;
-        }
+        const featureLink = document.getElementById('featureLink');
+        const spanElement = featureLink.querySelector('span');
+        featureLink.outerHTML = spanElement.outerHTML;
     }
 
     if (FEATURE.description) {
