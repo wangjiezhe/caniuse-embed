@@ -448,7 +448,7 @@ function displayTable(featureSupport) {
             const versionString = `<span>${browserVersion}</span><span class="usage">${BROWSER_DATA.usage[browser][period]}%</span>`;
 
             // ADD VERSION NUMBER TO TABLE CELL
-            if (BROWSER_DATA.versions[browser][period] !== undefined) {
+            if (BROWSER_DATA.versions[browser][period] !== null) {
                 period_element.innerHTML = versionString;
             } else {
                 period_element.innerHTML = '<span></span>';
